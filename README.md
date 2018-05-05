@@ -4,9 +4,9 @@
 ```
 "Myaf\\Log\\": "src/"
 ```
-### LLog的使用
+### Log的使用
 ```
-//LLog初始化
+//Log初始化
 Log::init('app-name', '/data/log/app', 'Asia/Shanghai', false);
 //debug日志
 Log::info('dir1',__FILE__,'HelloWorld');
@@ -21,7 +21,7 @@ Log::flush();
 * /data/log/app/dir1/20170311.txt
 * /data/log/app/dir2/20170311.txt
 ### 相关重要方法或属性
-* LLog::LOG_REQUEST_ID - 日志全局访问的requestId字段名称
+* Log::LOG_REQUEST_ID - 日志全局访问的requestId字段名称
 * function init(string $appName,string $logPath,string $timeZone='Asia/Shanghai',bool $debug=false) - 初始化日志系统
 * function init(string $appName,string $logPath,string $timeZone='Asia/Shanghai',bool $debug=false) - 初始化日志系统
 * function setAutoFlush($flush=false) - 设置每次记录都写日志, 默认关闭, 需要调用flush方法才写磁盘

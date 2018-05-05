@@ -12,10 +12,10 @@ use Exception;
 use Myaf\Utils\FileUtil;
 
 /**
- * Class LLog
+ * Class Log
  * @package Myaf\Log
  */
-class LLog
+class Log
 {
     /**
      * 日志唯一id.
