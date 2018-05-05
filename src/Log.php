@@ -9,7 +9,7 @@
 namespace Myaf\Log;
 
 use Exception;
-use Myaf\Utils\LFile;
+use Myaf\Utils\FileUtil;
 
 /**
  * Class LLog
@@ -200,9 +200,9 @@ class LLog
                 $logFileName = $newLogPath . '/' . date('Y-m-d') . '.txt';
                 $logContent = join("\n", $item) . "\n";
                 if (is_file($logFileName)) {
-                    LFile::append($logFileName, $logContent);
+                    FileUtil::append($logFileName, $logContent);
                 } else {
-                    LFile::create($logFileName, $logContent);
+                    FileUtil::create($logFileName, $logContent);
                 }
             }
             self::$logs = [];
