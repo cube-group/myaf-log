@@ -1,5 +1,7 @@
 ## LOG
-
+[![Latest Stable Version](https://poser.pugx.org/cube-group/myaf-log/version)](https://packagist.org/packages/cube-group/myaf-log)
+[![Total Downloads](https://poser.pugx.org/cube-group/myaf-log/downloads)](https://packagist.org/packages/cube-group/myaf-log)
+[![License](https://poser.pugx.org/cube-group/myaf-log/license)](https://packagist.org/packages/cube-group/myaf-log)
 ### namespace
 ```
 "Myaf\\Log\\": "src/"
