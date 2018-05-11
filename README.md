@@ -30,7 +30,7 @@ Log::flush();
 * /data/log/l.eoffcn.com/20180511.txt
 
 
-### Log使用(多次文件读写)
+### Log使用(多次文件读写，防止程序中断没记到日志)
 1. 调用init方法初始化，指定应用名称和日志路径
 2. 调用setAutoFlush方法，传入true
 3. 调用debug|info|warn|error|fatal 方法打印相应级别的日志
