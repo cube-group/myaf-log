@@ -10,7 +10,8 @@
       "email": "linyangflash@163.com"
     },
     {
-      "name": "chenqionghe"
+      "name": "chenqionghe",
+      "email": "chenqionghe@sina.com"
     }
   ],
   "license": "MIT",
@@ -22,8 +23,7 @@
     }
   },
   "require": {
-    "php": ">=5.6",
-    "cube-group/myaf-utils": "*"
+    "php": ">=5.6"
   },
   "autoload": {
     "psr-4": {

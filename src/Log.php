@@ -1,15 +1,8 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: linyang
- * Date: 17/3/8
- * Time: 下午4:48
- */
 
 namespace Myaf\Log;
 
 use Exception;
-use Myaf\Utils\FileUtil;
 
 /**
  * Class Log
@@ -22,27 +15,30 @@ class Log
      */
     const LOG_REQUEST_ID = 'requestUniqueId';
 
-
     /**
      * 是否为测试模式.
      * @var bool
      */
     private static $debug = false;
+
     /**
      * 本次http请求的唯一id.
      * @var string
      */
     private static $requestId = '';
+
     /**
      * 当前应用名称。
      * @var string
      */
     private static $app = '';
+
     /**
      * 日志存储目录.
      * @var string
      */
     private static $logPath = '';
+
     /**
      * 二维数组日志存储器.
      * @var array
@@ -58,23 +54,20 @@ class Log
     /**
      * 初始化日志系统.
      *
-     * @param $app string 当前应用名称
-     * @param $path string 日志存储路径
+     * @param $app string 当前应用名字
+     * @param $logPath string 日志存储路径
      * @param $timeZone string 默认时区
      * @param $debug bool 是否为测试环境
      */
-    public static function init($app, $path, $timeZone = 'Asia/Shanghai', $debug = false)
+    public static function init($app, $logPath, $timeZone = 'Asia/Shanghai', $debug = false)
     {
         if (self::$app) {
-            //只允许一次init
             return;
         }
-
         self::$app = $app;
         self::$debug = $debug;
-        self::$logPath = $path;
+        self::$logPath = $logPath;
         self::$requestId = self::getGlobalRequestId();
-
         date_default_timezone_set($timeZone);
     }
 
@@ -114,67 +107,92 @@ class Log
         return self::$requestId;
     }
 
+    /**
+     * debug日志
+     *
+     * @param string $route 路由
+     * @param string $uid 用户类信息(例如: 相关用户id或用户名或手机号等)
+     * @param string $code 业务错误码
+     * @param string $msg 业务错误信息
+     * @param string $ext1 标准扩展字段1
+     * @param string $ext2 标准扩展字段2
+     * @param string $ext3 标准扩展字段3
+     * @throws Exception
+     */
+    public static function debug($route = '', $uid = '', $code = '', $msg = '', $ext1 = '', $ext2 = '', $ext3 = '')
+    {
+        self::append('DEBUG', $route, $uid, $code, $msg, $ext1, $ext2, $ext3);
+    }
+
 
     /**
-     * debug日志.
+     * 常规日志
      *
-     * @param string $name
-     * @param $file string
-     * @param array ...$args
+     * @param string $route 路由
+     * @param string $uid 用户类信息(例如: 相关用户id或用户名或手机号等)
+     * @param string $code 业务错误码
+     * @param string $msg 业务错误信息
+     * @param string $ext1 标准扩展字段1
+     * @param string $ext2 标准扩展字段2
+     * @param string $ext3 标准扩展字段3
+     * @throws Exception
      */
-    public static function debug($name = 'default', $file = __FILE__, ...$args)
+    public static function info($route = '', $uid = '', $code = '', $msg = '', $ext1 = '', $ext2 = '', $ext3 = '')
     {
-        if (self::$debug) {
-            self::append('DEBUG', $name, $args, $file);
-        }
+        self::append('INFO', $route, $uid, $code, $msg, $ext1, $ext2, $ext3);
+    }
+
+
+    /**
+     * 警告日志
+     *
+     * @param string $route 路由
+     * @param string $uid 用户类信息(例如: 相关用户id或用户名或手机号等)
+     * @param string $code 业务错误码
+     * @param string $msg 业务错误信息
+     * @param string $ext1 标准扩展字段1
+     * @param string $ext2 标准扩展字段2
+     * @param string $ext3 标准扩展字段3
+     * @throws Exception
+     */
+    public static function warn($route = '', $uid = '', $code = '', $msg = '', $ext1 = '', $ext2 = '', $ext3 = '')
+    {
+        self::append('WARN', $route, $uid, $code, $msg, $ext1, $ext2, $ext3);
     }
 
     /**
-     * 常规日志.
+     * 挂掉日志
      *
-     * @param string $name
-     * @param $file
-     * @param array ...$args
+     * @param string $route 路由
+     * @param string $uid 用户类信息(例如: 相关用户id或用户名或手机号等)
+     * @param string $code 业务错误码
+     * @param string $msg 业务错误信息
+     * @param string $ext1 标准扩展字段1
+     * @param string $ext2 标准扩展字段2
+     * @param string $ext3 标准扩展字段3
+     * @throws Exception
      */
-    public static function info($name = 'default', $file = __FILE__, ...$args)
+    public static function fatal($route = '', $uid = '', $code = '', $msg = '', $ext1 = '', $ext2 = '', $ext3 = '')
     {
-        self::append('INFO', $name, $args, $file);
+        self::append('FATAL', $route, $uid, $code, $msg, $ext1, $ext2, $ext3);
     }
 
-    /**
-     * 警告日志.
-     *
-     * @param string $name
-     * @param $file string
-     * @param array ...$args
-     */
-    public static function warn($name = 'default', $file = __FILE__, ...$args)
-    {
-        self::append('WARN', $name, $args, $file);
-    }
 
     /**
-     * 错误日志.
+     * 错误日志
      *
-     * @param string $name
-     * @param $file string
-     * @param array ...$args
+     * @param string $route 路由
+     * @param string $uid 用户类信息(例如: 相关用户id或用户名或手机号等)
+     * @param string $code 业务错误码
+     * @param string $msg 业务错误信息
+     * @param string $ext1 标准扩展字段1
+     * @param string $ext2 标准扩展字段2
+     * @param string $ext3 标准扩展字段3
+     * @throws Exception
      */
-    public static function error($name = 'default', $file = __FILE__, ...$args)
+    public static function error($route = '', $uid = '', $code = '', $msg = '', $ext1 = '', $ext2 = '', $ext3 = '')
     {
-        self::append('ERROR', $name, $args, $file);
-    }
-
-    /**
-     * 挂机错误日志.
-     *
-     * @param string $name
-     * @param $file string
-     * @param array ...$args
-     */
-    public static function fatal($name = 'default', $file = __FILE__, ...$args)
-    {
-        self::append('FATAL', $name, $args, $file);
+        self::append('ERROR', $route, $uid, $code, $msg, $ext1, $ext2, $ext3);
     }
 
 
@@ -190,20 +208,14 @@ class Log
         }
         $logPath = self::$logPath;
         try {
-            foreach (self::$logs as $childPath => $item) {
-                $newLogPath = $logPath . '/' . $childPath;
-                if (!is_dir($newLogPath)) {
-                    if (!@mkdir($newLogPath, 0777, true)) {
+            foreach (self::$logs as $item) {
+                if (!is_dir($logPath)) {
+                    if (!@mkdir($logPath, 0777, true)) {
                         continue;
                     }
                 }
-                $logFileName = $newLogPath . '/' . date('Y-m-d') . '.txt';
-                $logContent = join("\n", $item) . "\n";
-                if (is_file($logFileName)) {
-                    FileUtil::append($logFileName, $logContent);
-                } else {
-                    FileUtil::create($logFileName, $logContent);
-                }
+                $logFileName = $logPath . '/' . date('Y-m-d') . '.txt';
+                self::writeFile($logFileName, $item);
             }
             self::$logs = [];
             return true;
@@ -212,51 +224,76 @@ class Log
         return false;
     }
 
-
     /**
      * 将日志压入内存暂存器.
-     * @param $type string 日志等级
-     * @param $dir string 子目录名称
-     * @param $values array ...$args日志数组
-     * @param $file string 打印日志所在的文件地址
+     *
+     * @param $level string 日志等级
+     * @param string $route 路由
+     * @param string $uid 用户类信息(例如: 相关用户id或用户名或手机号等)
+     * @param string $code 业务错误码
+     * @param string $msg 业务错误信息
+     * @param string $ext1 标准扩展字段1
+     * @param string $ext2 标准扩展字段2
+     * @param string $ext3 标准扩展字段3
      * @throws Exception
      */
-    private static function append($type, $dir, $values, $file = __FILE__)
+    private static function append($level, $route = '', $uid = '', $code = '', $msg = '', $ext1 = '', $ext2 = '', $ext3 = '')
     {
-        $dir = str_replace('/', '-', $dir);
         if (!self::$requestId || !self::$logPath) {
             throw new Exception('log not initialized');
         }
-        if (!$dir || !$values) {
-            throw new Exception('log not initialized');
-        }
-        if (!isset(self::$logs[$dir])) {
-            self::$logs[$dir] = [];
-        }
-        $values = json_encode($values, JSON_UNESCAPED_UNICODE);
-
-        $logString = self::getFormatString(date('Y-m-d H:i:s'));
-        $logString .= self::getFormatString(getmypid());
-        $logString .= self::getFormatString($file);
-        $logString .= self::getFormatString($type);
-        $logString .= '(' . self::$requestId . ')';
-        $logString .= $values;
-
-        array_push(self::$logs[$dir], $logString);
-
+        $logContent = [];
+        $logContent[] = date('Y-m-d H:i:s');
+        $logContent[] = $level;
+        $logContent[] = self::$requestId;
+        $logContent[] = self::$app;
+        $logContent[] = getmypid();
+        $logContent[] = $route;
+        $logContent[] = $uid;
+        $logContent[] = $code;
+        $logContent[] = $msg;
+        $logContent[] = $ext1;
+        $logContent[] = $ext2;
+        $logContent[] = $ext3;
+        $logString = self::getLogString($logContent);
+        array_push(self::$logs, $logString);
         if (self::$autoFlush) {
             self::flush();
         }
     }
 
+    /**
+     * 写入日志文件
+     *
+     * @param string $logFile
+     * @param string $content
+     * @return true
+     */
+    private static function writeFile($logFile, $content)
+    {
+        $fp = fopen($logFile, 'a');
+        if (flock($fp, LOCK_EX)) {
+            fwrite($fp, $content . "\n");
+            flock($fp, LOCK_UN);
+        }
+        fclose($fp);
+        return true;
+    }
 
     /**
-     * 生成标准日志结构体.
-     * @param $value string
+     * 获取日志内容字符串
+     *
+     * @param $logContent
      * @return string
      */
-    private static function getFormatString($value)
+    private static function getLogString($logContent)
     {
-        return '[' . $value . ']';
+        foreach ($logContent as $k => $content) {
+            if (is_array($content)) {
+                $logContent[$k] = json_encode($content, JSON_UNESCAPED_UNICODE);
+            }
+        }
+        $logString = implode('|', $logContent);
+        return $logString;
     }
 }
