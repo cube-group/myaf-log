@@ -61,7 +61,7 @@ Log::error("index/hello", "18888888888", 1001, 'world','其他信息','其他信
 
 ### 日志组装结构
 ```
-$date|$domain|$pid|$route|$uid|$code|$msg|$ext1|$ext2|$ext3
+$date|$level|$ruid|$domain|$pid|$route|$uid|$code|$msg|$ext1|$ext2|$ext3
 ```
 * $date: 日期(例如: 2018-05-10 20:00)
 * $level: 日志级别(INFO ERROR DEBUG WARN)

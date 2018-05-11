@@ -59,7 +59,7 @@ class Log
      * @param $timeZone string 默认时区
      * @param $debug bool 是否为测试环境
      */
-    public static function init($app, $logPath, $timeZone = 'Asia/Shanghai', $debug = false)
+    public static function init($app, $logPath='/data/log', $timeZone = 'Asia/Shanghai', $debug = false)
     {
         if (self::$app) {
             return;
