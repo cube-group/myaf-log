@@ -59,7 +59,7 @@ class Log
      * @param $timeZone string 默认时区
      * @param $debug bool 是否为测试环境
      */
-    public static function init($app, $logPath='/data/log', $timeZone = 'Asia/Shanghai', $debug = false)
+    public static function init($app, $logPath = '/data/log', $timeZone = 'Asia/Shanghai', $debug = false)
     {
         if (self::$app) {
             return;
@@ -114,14 +114,12 @@ class Log
      * @param string $uid 用户类信息(例如: 相关用户id或用户名或手机号等)
      * @param string $code 业务错误码
      * @param string $msg 业务错误信息
-     * @param string $ext1 标准扩展字段1
-     * @param string $ext2 标准扩展字段2
-     * @param string $ext3 标准扩展字段3
+     * @param string|array|number $ext 标准扩展字段
      * @throws Exception
      */
-    public static function debug($route = '', $uid = '', $code = '', $msg = '', $ext1 = '', $ext2 = '', $ext3 = '')
+    public static function debug($route = '', $uid = '', $code = '', $msg = '', ...$ext)
     {
-        self::append('DEBUG', $route, $uid, $code, $msg, $ext1, $ext2, $ext3);
+        self::append('DEBUG', $route, $uid, $code, $msg, $ext);
     }
 
 
@@ -132,14 +130,12 @@ class Log
      * @param string $uid 用户类信息(例如: 相关用户id或用户名或手机号等)
      * @param string $code 业务错误码
      * @param string $msg 业务错误信息
-     * @param string $ext1 标准扩展字段1
-     * @param string $ext2 标准扩展字段2
-     * @param string $ext3 标准扩展字段3
+     * @param string|array|number $ext 标准扩展字段
      * @throws Exception
      */
-    public static function info($route = '', $uid = '', $code = '', $msg = '', $ext1 = '', $ext2 = '', $ext3 = '')
+    public static function info($route = '', $uid = '', $code = '', $msg = '', ...$ext)
     {
-        self::append('INFO', $route, $uid, $code, $msg, $ext1, $ext2, $ext3);
+        self::append('INFO', $route, $uid, $code, $msg, $ext);
     }
 
 
@@ -150,14 +146,12 @@ class Log
      * @param string $uid 用户类信息(例如: 相关用户id或用户名或手机号等)
      * @param string $code 业务错误码
      * @param string $msg 业务错误信息
-     * @param string $ext1 标准扩展字段1
-     * @param string $ext2 标准扩展字段2
-     * @param string $ext3 标准扩展字段3
+     * @param string|array|number $ext 标准扩展字段
      * @throws Exception
      */
-    public static function warn($route = '', $uid = '', $code = '', $msg = '', $ext1 = '', $ext2 = '', $ext3 = '')
+    public static function warn($route = '', $uid = '', $code = '', $msg = '', ...$ext)
     {
-        self::append('WARN', $route, $uid, $code, $msg, $ext1, $ext2, $ext3);
+        self::append('WARN', $route, $uid, $code, $msg, $ext);
     }
 
     /**
@@ -167,14 +161,12 @@ class Log
      * @param string $uid 用户类信息(例如: 相关用户id或用户名或手机号等)
      * @param string $code 业务错误码
      * @param string $msg 业务错误信息
-     * @param string $ext1 标准扩展字段1
-     * @param string $ext2 标准扩展字段2
-     * @param string $ext3 标准扩展字段3
+     * @param string|array|number $ext 标准扩展字段
      * @throws Exception
      */
-    public static function fatal($route = '', $uid = '', $code = '', $msg = '', $ext1 = '', $ext2 = '', $ext3 = '')
+    public static function fatal($route = '', $uid = '', $code = '', $msg = '', ...$ext)
     {
-        self::append('FATAL', $route, $uid, $code, $msg, $ext1, $ext2, $ext3);
+        self::append('FATAL', $route, $uid, $code, $msg, $ext);
     }
 
 
@@ -185,14 +177,12 @@ class Log
      * @param string $uid 用户类信息(例如: 相关用户id或用户名或手机号等)
      * @param string $code 业务错误码
      * @param string $msg 业务错误信息
-     * @param string $ext1 标准扩展字段1
-     * @param string $ext2 标准扩展字段2
-     * @param string $ext3 标准扩展字段3
+     * @param string|array|number $ext 标准扩展字段
      * @throws Exception
      */
-    public static function error($route = '', $uid = '', $code = '', $msg = '', $ext1 = '', $ext2 = '', $ext3 = '')
+    public static function error($route = '', $uid = '', $code = '', $msg = '', ...$ext)
     {
-        self::append('ERROR', $route, $uid, $code, $msg, $ext1, $ext2, $ext3);
+        self::append('ERROR', $route, $uid, $code, $msg, $ext);
     }
 
 
@@ -225,6 +215,24 @@ class Log
     }
 
     /**
+     * 获取访问的用户IP
+     * @return string
+     */
+    private static function requestIp()
+    {
+        if (getenv('HTTP_CLIENT_IP')) {
+            $onlineIp = getenv('HTTP_CLIENT_IP');
+        } else if (getenv('HTTP_X_FORWARDED_FOR')) {
+            $onlineIp = getenv('HTTP_X_FORWARDED_FOR');
+        } else if (getenv('REMOTE_ADDR')) {
+            $onlineIp = getenv('REMOTE_ADDR');
+        } else {
+            $onlineIp = $_SERVER['REMOTE_ADDR'];
+        }
+        return $onlineIp;
+    }
+
+    /**
      * 将日志压入内存暂存器.
      *
      * @param $level string 日志等级
@@ -232,18 +240,17 @@ class Log
      * @param string $uid 用户类信息(例如: 相关用户id或用户名或手机号等)
      * @param string $code 业务错误码
      * @param string $msg 业务错误信息
-     * @param string $ext1 标准扩展字段1
-     * @param string $ext2 标准扩展字段2
-     * @param string $ext3 标准扩展字段3
+     * @param mixed $ext 标准扩展字段
      * @throws Exception
      */
-    private static function append($level, $route = '', $uid = '', $code = '', $msg = '', $ext1 = '', $ext2 = '', $ext3 = '')
+    private static function append($level, $route = '', $uid = '', $code = '', $msg = '', $ext = '-')
     {
         if (!self::$requestId || !self::$logPath) {
             throw new Exception('log not initialized');
         }
         $logContent = [];
         $logContent[] = date('Y-m-d H:i:s');
+        $logContent[] = self::requestIp();
         $logContent[] = $level;
         $logContent[] = self::$requestId;
         $logContent[] = self::$app;
@@ -252,9 +259,7 @@ class Log
         $logContent[] = $uid;
         $logContent[] = $code;
         $logContent[] = $msg;
-        $logContent[] = $ext1;
-        $logContent[] = $ext2;
-        $logContent[] = $ext3;
+        $logContent[] = $ext;
         $logString = self::getLogString($logContent);
         array_push(self::$logs, $logString);
         if (self::$autoFlush) {
@@ -289,6 +294,9 @@ class Log
     private static function getLogString($logContent)
     {
         foreach ($logContent as $k => $content) {
+            if (!$content) {
+                $content = '-';
+            }
             if (is_array($content)) {
                 $logContent[$k] = json_encode($content, JSON_UNESCAPED_UNICODE);
             }
