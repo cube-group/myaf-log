@@ -196,22 +196,18 @@ class Log
         if (empty(self::$logs)) {
             return true;
         }
-        $logPath = self::$logPath;
-        try {
-            foreach (self::$logs as $item) {
-                if (!is_dir($logPath)) {
-                    if (!@mkdir($logPath, 0777, true)) {
-                        continue;
-                    }
-                }
-                $logFileName = $logPath . '/' . date('Y-m-d') . '.txt';
-                self::writeFile($logFileName, $item);
+        if (!$logPath = realpath(self::$logPath))
+        if (!$logPath = is_dir(self::$logPath)) {
+            if (!mkdir($logPath, 0777, true)) {
+                throw new Exception("can not mkdir {$logPath}");
             }
-            self::$logs = [];
-            return true;
-        } catch (Exception $e) {
         }
-        return false;
+        $logFileName = realpath($logPath) . DIRECTORY_SEPARATOR . date('Y-m-d') . '.txt';
+        foreach (self::$logs as $item) {
+            self::writeFile($logFileName, $item);
+        }
+        self::$logs = [];
+        return true;
     }
 
     /**
