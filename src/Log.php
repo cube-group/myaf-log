@@ -43,7 +43,7 @@ class Log
      * 二维数组日志存储器.
      * @var array
      */
-    private static $logs = [];
+    private static $logs = array();
 
     /**
      * 开启将每次记录都写日志
@@ -117,7 +117,7 @@ class Log
      * @param string|array|number $ext 标准扩展字段
      * @throws Exception
      */
-    public static function debug($route = '', $uid = '', $code = '', $msg = '', ...$ext)
+    public static function debug($route = '', $uid = '', $code = '', $msg = '', $ext = '')
     {
         self::append('DEBUG', $route, $uid, $code, $msg, $ext);
     }
@@ -133,7 +133,7 @@ class Log
      * @param string|array|number $ext 标准扩展字段
      * @throws Exception
      */
-    public static function info($route = '', $uid = '', $code = '', $msg = '', ...$ext)
+    public static function info($route = '', $uid = '', $code = '', $msg = '', $ext = '')
     {
         self::append('INFO', $route, $uid, $code, $msg, $ext);
     }
@@ -149,7 +149,7 @@ class Log
      * @param string|array|number $ext 标准扩展字段
      * @throws Exception
      */
-    public static function warn($route = '', $uid = '', $code = '', $msg = '', ...$ext)
+    public static function warn($route = '', $uid = '', $code = '', $msg = '', $ext = '')
     {
         self::append('WARN', $route, $uid, $code, $msg, $ext);
     }
@@ -164,7 +164,7 @@ class Log
      * @param string|array|number $ext 标准扩展字段
      * @throws Exception
      */
-    public static function fatal($route = '', $uid = '', $code = '', $msg = '', ...$ext)
+    public static function fatal($route = '', $uid = '', $code = '', $msg = '', $ext = '')
     {
         self::append('FATAL', $route, $uid, $code, $msg, $ext);
     }
@@ -180,7 +180,7 @@ class Log
      * @param string|array|number $ext 标准扩展字段
      * @throws Exception
      */
-    public static function error($route = '', $uid = '', $code = '', $msg = '', ...$ext)
+    public static function error($route = '', $uid = '', $code = '', $msg = '', $ext = '')
     {
         self::append('ERROR', $route, $uid, $code, $msg, $ext);
     }
@@ -206,7 +206,7 @@ class Log
         foreach (self::$logs as $item) {
             self::writeFile($logFileName, $item);
         }
-        self::$logs = [];
+        self::$logs = array();
         return true;
     }
 
@@ -244,7 +244,7 @@ class Log
         if (!self::$requestId || !self::$logPath) {
             throw new Exception('log not initialized');
         }
-        $logContent = [];
+        $logContent = array();
         $logContent[] = date('Y-m-d H:i:s');
         $logContent[] = self::requestIp();
         $logContent[] = $level;
