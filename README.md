@@ -16,7 +16,7 @@
 
 ```shell
 分隔符使用竖线 |
-$date|$ip|$level|$ruid|$domain|$pid|$route|$uid|$code|$msg|$ext1|$ext2|$ext3
+$date|$ip|$level|$ruid|$domain|$pid|$route|$uid|$code|$msg|$ext
 ```
 
 * $date: 日期(例如: 2018-05-10 20:00)
@@ -33,7 +33,7 @@ $date|$ip|$level|$ruid|$domain|$pid|$route|$uid|$code|$msg|$ext1|$ext2|$ext3
 * 业务标准日志Demo:
 
 ```shell
-2018-05-08 20:00|192.168.0.10|ERROR|1q2w3e4r522|l.eoffcn.com|7732|/user/login|1590214776|9800|ERR_SOMETHING|xxx|xxx|xxx
+2018-05-08 20:00|192.168.0.10|ERROR|1q2w3e4r522|l.eoffcn.com|7732|/user/login|1590214776|9800|ERR_SOMETHING|xxx
 ```
 
 ### 3.日期级别
