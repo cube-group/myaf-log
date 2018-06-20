@@ -196,8 +196,8 @@ class Log
         if (empty(self::$logs)) {
             return true;
         }
-        if (!$logPath = realpath(self::$logPath))
-        if (!$logPath = is_dir(self::$logPath)) {
+        $logPath = self::$logPath;
+        if (!realpath(self::$logPath)) {
             if (!mkdir($logPath, 0777, true)) {
                 throw new Exception("can not mkdir {$logPath}");
             }
