@@ -6,6 +6,7 @@ use Exception;
 
 /**
  * Class Log
+ * 标准业务日志
  * @package Myaf\Log
  */
 class Log
@@ -291,7 +292,7 @@ class Log
     {
         foreach ($logContent as $k => $content) {
             if (!$content) {
-                $content = '-';
+                $content = '';
             }
             if (is_array($content)) {
                 $logContent[$k] = json_encode($content, JSON_UNESCAPED_UNICODE);

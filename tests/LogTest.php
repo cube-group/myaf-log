@@ -3,7 +3,7 @@
 use Myaf\Log\Log;
 use PHPUnit\Framework\TestCase;
 
-class TestLog extends TestCase
+class LogTest extends TestCase
 {
     public function testCommon()
     {
@@ -38,6 +38,6 @@ class TestLog extends TestCase
     }
 }
 
-$test = new TestLog();
+$test = new LogTest();
 $test->testCommon();
 $test->testAutoFlush();
