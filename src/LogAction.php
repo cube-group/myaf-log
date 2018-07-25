@@ -47,14 +47,16 @@ class LogAction
      * @param $logPath string 日志存储路径
      * @param $timeZone string 默认时区
      */
-    public static function init($app = '', $version = '0.0.0', $logPath = '/data/log', $timeZone = 'Asia/Shanghai')
+    public static function init($app = '', $version = '', $logPath = '/data/log', $timeZone = 'Asia/Shanghai')
     {
         if (self::$app) {
             return;
         }
-
         if (!$app) {
-            $app = getenv('APP_NAME');
+            $app = getenv('APP_NAME') ? getenv('APP_NAME') : 'unknown';
+        }
+        if (!$version) {
+            $version = getenv('APP_VERSION') ? getenv('APP_VERSION') : 'unknown';
         }
         self::$app = $app;
         self::$version = $version;
@@ -82,7 +84,7 @@ class LogAction
     public static function save($uid, $action, $ext = '')
     {
         if (!self::$logPath) {
-            throw new Exception('log not initialized');
+            self::init();
         }
         $logContent = array();
         //time

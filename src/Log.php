@@ -60,10 +60,13 @@ class Log
      * @param $timeZone string 默认时区
      * @param $debug bool 是否为测试环境
      */
-    public static function init($app, $logPath = '/data/log', $timeZone = 'Asia/Shanghai', $debug = false)
+    public static function init($app = '', $logPath = '/data/log', $timeZone = 'Asia/Shanghai', $debug = false)
     {
         if (self::$app) {
             return;
+        }
+        if (!$app) {
+            $app = getenv('APP_NAME') ? getenv('APP_NAME') : 'unknown';
         }
         self::$app = $app;
         self::$debug = $debug;
@@ -242,8 +245,8 @@ class Log
      */
     private static function append($level, $route = '', $uid = '', $code = '', $msg = '', $ext = '-')
     {
-        if (!self::$requestId || !self::$logPath) {
-            throw new Exception('log not initialized');
+        if (!self::$requestId) {
+            self::init();
         }
         $logContent = array();
         $logContent[] = date('Y-m-d H:i:s');
