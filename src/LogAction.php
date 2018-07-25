@@ -149,7 +149,7 @@ class LogAction
      */
     private static function writeFile($logFile, $content)
     {
-        $fp = fopen($logFile, 'a+');
+        $fp = fopen($logFile, 'a');
         if (flock($fp, LOCK_EX)) {
             fwrite($fp, $content . "\n");
             flock($fp, LOCK_UN);
