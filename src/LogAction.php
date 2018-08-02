@@ -76,12 +76,13 @@ class LogAction
 
     /**
      * 存储日志
-     * @param $uid string 用户关联信息
      * @param $action string 统计动作类型
-     * @param array|string $ext 扩展字段
+     * @param $uid string 用户关联信息
+     * @param $ip string ip信息(如果为空则使用服务器IP)
+     * @param array $ext 扩展字段
      * @throws Exception
      */
-    public static function save($uid, $action, $ext = '')
+    public static function save($action, $uid, $ip = '', $ext = null)
     {
         if (!self::$logPath) {
             self::init();
@@ -98,7 +99,7 @@ class LogAction
         //os
         $logContent[] = strtolower(PHP_OS);
         //ip
-        $logContent[] = self::serverIp();
+        $logContent[] = $ip ? $ip : self::serverIp();
         //uid
         $logContent[] = $uid;
         //action
