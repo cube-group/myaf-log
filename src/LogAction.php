@@ -100,6 +100,10 @@ class LogAction
         $logContent[] = strtolower(PHP_OS);
         //ip
         $logContent[] = $ip ? $ip : self::serverIp();
+        //from
+        $logContent[] = '';
+        //uuid
+        $logContent[] = '';
         //uid
         $logContent[] = $uid;
         //action
@@ -140,7 +144,7 @@ class LogAction
 
     private static function serverIp()
     {
-        return $_SERVER['SERVER_ADDR'];
+        return isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : '';
     }
 
     /**
@@ -148,17 +152,11 @@ class LogAction
      *
      * @param string $logFile
      * @param string $content
-     * @return true
+     * @return mixed
      */
     private static function writeFile($logFile, $content)
     {
-        $fp = fopen($logFile, 'a');
-        if (flock($fp, LOCK_EX)) {
-            fwrite($fp, $content . "\n");
-            flock($fp, LOCK_UN);
-        }
-        fclose($fp);
-        return true;
+        return file_put_contents($logFile, $content . PHP_EOL, FILE_APPEND);
     }
 
     /**

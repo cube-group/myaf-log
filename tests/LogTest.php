@@ -1,9 +1,11 @@
 <?php
 
 use Myaf\Log\Log;
-use PHPUnit\Framework\TestCase;
+//use PHPUnit\Framework\TestCase;
 
-class LogTest extends TestCase
+require __DIR__ . '/../src/Log.php';
+
+class LogTest
 {
     public function testCommon()
     {

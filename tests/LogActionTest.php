@@ -16,6 +16,7 @@ class LogActionTest
     {
         //初始化日志
         LogAction::init('test', '0.2.0', __DIR__);
+        LogAction::setAutoFlush(true);
         //存储日志
         LogAction::save("user-login", "123333", '', array('phone' => '15901214776', 'address' => '中公教育'));
         //日志压栈存储
@@ -31,7 +32,7 @@ class LogActionTest
         LogAction::init('test', '0.2.0', __DIR__);
         LogAction::setAutoFlush(true);
         //存储日志
-        LogAction::save("123333", "user-buy-success");
+        LogAction::save("user-buy-success", '12312');
     }
 }
 

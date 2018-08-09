@@ -227,7 +227,7 @@ class Log
         } else if (getenv('REMOTE_ADDR')) {
             $onlineIp = getenv('REMOTE_ADDR');
         } else {
-            $onlineIp = $_SERVER['REMOTE_ADDR'];
+            $onlineIp = isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : '';
         }
         return $onlineIp;
     }
@@ -272,17 +272,11 @@ class Log
      *
      * @param string $logFile
      * @param string $content
-     * @return true
+     * @return mixed
      */
     private static function writeFile($logFile, $content)
     {
-        $fp = fopen($logFile, 'a');
-        if (flock($fp, LOCK_EX)) {
-            fwrite($fp, $content . "\n");
-            flock($fp, LOCK_UN);
-        }
-        fclose($fp);
-        return true;
+        return file_put_contents($logFile, $content . PHP_EOL, FILE_APPEND);
     }
 
     /**
