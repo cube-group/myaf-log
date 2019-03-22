@@ -1,13 +1,20 @@
 <?php
-
 namespace Myaf\Log;
 
+/**
+ * Created by PhpStorm.
+ * User: linyang
+ * Date: 2019/3/22
+ * Time: 10:20 AM
+ */
 use Exception;
+use Monolog\Formatter\LineFormatter;
+use Monolog\Handler\StreamHandler;
+use Monolog\Logger;
 
 /**
  * Class Log
  * 标准业务日志
- * @package Myaf\Log
  */
 class Log
 {
@@ -17,72 +24,127 @@ class Log
     const LOG_REQUEST_ID = 'requestUniqueId';
 
     /**
-     * 是否为测试模式.
      * @var bool
      */
-    private static $debug = false;
-
+    private static $_debug = false;
     /**
-     * 本次http请求的唯一id.
      * @var string
      */
-    private static $requestId = '';
-
+    private static $_requestId = '';
     /**
-     * 当前应用名称。
      * @var string
      */
-    private static $app = '';
-
+    private static $_logPath = '';
     /**
-     * 日志存储目录.
      * @var string
      */
-    private static $logPath = '';
+    private static $_app;
+    /**
+     * @var Logger
+     */
+    private static $_instance;
 
     /**
-     * 二维数组日志存储器.
-     * @var array
+     * @var Logger
      */
-    private static $logs = array();
+    private $_logger;
 
-    /**
-     * 开启将每次记录都写日志
-     * @var bool
-     */
-    private static $autoFlush = false;
-
-    /**
-     * 初始化日志系统.
-     *
-     * @param $app string 当前应用名字
-     * @param $logPath string 日志存储路径
-     * @param $timeZone string 默认时区
-     * @param $debug bool 是否为测试环境
-     */
-    public static function init($app = '', $logPath = '/data/log', $timeZone = 'Asia/Shanghai', $debug = false)
+    public function __construct()
     {
-        if (self::$app) {
-            return;
-        }
-        if (!$app) {
-            $app = getenv('APP_NAME') ? getenv('APP_NAME') : 'unknown';
-        }
-        self::$app = $app;
-        self::$debug = $debug;
-        self::$logPath = $logPath;
-        self::$requestId = self::getGlobalRequestId();
-        date_default_timezone_set($timeZone);
+        $output = "%datetime%|%context.ip%|%context.level%|%context.ruid%|%context.app%|%context.pid%|%context.route%|%context.uid%|%context.code%|%context.msg%|%message%\n";
+        $formatter = new LineFormatter($output, 'Y-m-d H:i:s');
+
+        $stream = new StreamHandler(realpath(self::$_logPath) . '/' . date('Y-m-d') . '.txt');
+        $stream->setFormatter($formatter);
+        $stream->setLevel(self::$_debug ? Logger::DEBUG : Logger::INFO);
+
+        $this->_logger = new Logger('my_logger');
+        $this->_logger->pushHandler($stream);
     }
 
     /**
-     * 设置自动刷日志
-     *
-     * @param bool $flag
+     * 初始化全局配置变量
+     * @param string $app
+     * @param string $logPath
+     * @param string $timeZone
+     * @param bool $debug
      */
-    public static function setAutoFlush($flag = false)
+    public static function init($app = 'text', $logPath = '/data/log', $timeZone = 'Asia/Shanghai', $debug = false)
     {
-        self::$autoFlush = $flag;
+        if (!self::$_instance) {
+            date_default_timezone_set($timeZone);
+            self::$_app = $app;
+            self::$_debug = $debug;
+            self::$_logPath = realpath($logPath);
+            self::$_instance = new self();
+        }
+        return self::$_instance;
+    }
+
+    /**
+     * log append
+     * @param $level
+     * @param string $route
+     * @param string $uid
+     * @param int $code
+     * @param string $msg
+     * @param string $ext
+     */
+    public function append($level, $route = '', $uid = '', $code = 0, $msg = '', $ext = '')
+    {
+        if (is_array($ext)) {
+            $ext = json_encode($ext, JSON_UNESCAPED_UNICODE);
+        } else if (!is_string($ext)) {
+            $ext = '';
+        }
+        $funcName = 'addInfo';
+        switch ($level) {
+            case 'DEBUG':
+                $funcName = 'addDebug';
+                break;
+            case 'INFO':
+                $funcName = 'addInfo';
+                break;
+            case 'WARN':
+                $funcName = 'addWarning';
+                break;
+            case 'ERROR':
+                $funcName = 'addError';
+                break;
+            case 'FATAL':
+                $funcName = 'addEmergency';
+                break;
+        }
+        $this->_logger->$funcName($ext, [
+            'datetime' => date('Y-m-d H:i:s'),
+            'ip' => self::requestIp(),
+            'level' => $level,
+            'ruid' => self::getGlobalRequestId(),
+            'app' => self::$_app,
+            'pid' => getmygid(),
+            'route' => $route,
+            'uid' => $uid,
+            'code' => $code,
+            'msg' => $msg
+        ]);
+    }
+
+    /**
+     * 获取访问的用户IP
+     * @return string
+     */
+    private static function requestIp()
+    {
+        if (isset($_SERVER['HTTP_REMOTEIP'])) {
+            return $_SERVER['HTTP_REMOTEIP'];
+        }
+        if (isset($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+            return explode(',', $_SERVER['HTTP_X_FORWARDED_FOR'])[0];
+        }
+        if (isset($_SERVER['HTTP_X_REAL_IP'])) {
+            return $_SERVER['HTTP_X_REAL_IP'];
+        }
+        return isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : '';
     }
 
 
@@ -95,20 +157,20 @@ class Log
      */
     public static function getGlobalRequestId()
     {
-        if (!self::$requestId) {
+        if (!self::$_requestId) {
             try {
                 if (isset($_GET[self::LOG_REQUEST_ID]) && $_GET[self::LOG_REQUEST_ID]) {
-                    self::$requestId = $_GET[self::LOG_REQUEST_ID];
+                    self::$_requestId = $_GET[self::LOG_REQUEST_ID];
                 } else if (isset($_POST[self::LOG_REQUEST_ID]) && $_POST[self::LOG_REQUEST_ID]) {
-                    self::$requestId = $_POST[self::LOG_REQUEST_ID];
+                    self::$_requestId = $_POST[self::LOG_REQUEST_ID];
                 } else {
-                    self::$requestId = uniqid();
+                    self::$_requestId = uniqid();
                 }
             } catch (Exception $e) {
-                self::$requestId = uniqid();
+                self::$_requestId = uniqid();
             }
         }
-        return self::$requestId;
+        return self::$_requestId;
     }
 
     /**
@@ -123,7 +185,7 @@ class Log
      */
     public static function debug($route = '', $uid = '', $code = '', $msg = '', $ext = '')
     {
-        self::append('DEBUG', $route, $uid, $code, $msg, $ext);
+        self::init()->append('DEBUG', $route, $uid, $code, $msg, $ext);
     }
 
 
@@ -139,7 +201,7 @@ class Log
      */
     public static function info($route = '', $uid = '', $code = '', $msg = '', $ext = '')
     {
-        self::append('INFO', $route, $uid, $code, $msg, $ext);
+        self::init()->append('INFO', $route, $uid, $code, $msg, $ext);
     }
 
 
@@ -155,7 +217,7 @@ class Log
      */
     public static function warn($route = '', $uid = '', $code = '', $msg = '', $ext = '')
     {
-        self::append('WARN', $route, $uid, $code, $msg, $ext);
+        self::init()->append('WARN', $route, $uid, $code, $msg, $ext);
     }
 
     /**
@@ -170,7 +232,7 @@ class Log
      */
     public static function fatal($route = '', $uid = '', $code = '', $msg = '', $ext = '')
     {
-        self::append('FATAL', $route, $uid, $code, $msg, $ext);
+        self::init()->append('FATAL', $route, $uid, $code, $msg, $ext);
     }
 
 
@@ -186,116 +248,16 @@ class Log
      */
     public static function error($route = '', $uid = '', $code = '', $msg = '', $ext = '')
     {
-        self::append('ERROR', $route, $uid, $code, $msg, $ext);
+        self::init()->append('ERROR', $route, $uid, $code, $msg, $ext);
     }
 
+    public static function setAutoFlush($flag = true)
+    {
+        //...todo
+    }
 
-    /**
-     * 将此次访问的的所有日志录入相关日志文件.
-     * @return bool
-     * @throws Exception
-     */
     public static function flush()
     {
-        if (empty(self::$logs)) {
-            return true;
-        }
-        $logPath = self::$logPath;
-        if (!realpath(self::$logPath)) {
-            if (!mkdir($logPath, 0777, true)) {
-                throw new Exception("can not mkdir {$logPath}");
-            }
-        }
-        $logFileName = realpath($logPath) . DIRECTORY_SEPARATOR . date('Y-m-d') . '.txt';
-        foreach (self::$logs as $item) {
-            self::writeFile($logFileName, $item);
-        }
-        self::$logs = array();
-        return true;
-    }
-
-    /**
-     * 获取访问的用户IP
-     * @return string
-     */
-    private static function requestIp()
-    {
-        if (getenv('HTTP_CLIENT_IP')) {
-            $onlineIp = getenv('HTTP_CLIENT_IP');
-        } else if (getenv('HTTP_X_FORWARDED_FOR')) {
-            $onlineIp = getenv('HTTP_X_FORWARDED_FOR');
-        } else if (getenv('REMOTE_ADDR')) {
-            $onlineIp = getenv('REMOTE_ADDR');
-        } else {
-            $onlineIp = isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : '';
-        }
-        return $onlineIp;
-    }
-
-    /**
-     * 将日志压入内存暂存器.
-     *
-     * @param $level string 日志等级
-     * @param string $route 路由
-     * @param string $uid 用户类信息(例如: 相关用户id或用户名或手机号等)
-     * @param string $code 业务错误码
-     * @param string $msg 业务错误信息
-     * @param mixed $ext 标准扩展字段
-     * @throws Exception
-     */
-    private static function append($level, $route = '', $uid = '', $code = '', $msg = '', $ext = '-')
-    {
-        if (!self::$requestId) {
-            self::init();
-        }
-        $logContent = array();
-        $logContent[] = date('Y-m-d H:i:s');
-        $logContent[] = self::requestIp();
-        $logContent[] = $level;
-        $logContent[] = self::$requestId;
-        $logContent[] = self::$app;
-        $logContent[] = getmypid();
-        $logContent[] = $route;
-        $logContent[] = $uid;
-        $logContent[] = $code;
-        $logContent[] = $msg;
-        $logContent[] = $ext;
-        $logString = self::getLogString($logContent);
-        array_push(self::$logs, $logString);
-        if (self::$autoFlush) {
-            self::flush();
-        }
-    }
-
-    /**
-     * 写入日志文件
-     *
-     * @param string $logFile
-     * @param string $content
-     * @return mixed
-     */
-    private static function writeFile($logFile, $content)
-    {
-        return file_put_contents($logFile, $content . PHP_EOL, FILE_APPEND);
-    }
-
-    /**
-     * 获取日志内容字符串
-     *
-     * @param $logContent
-     * @return string
-     */
-    private static function getLogString($logContent)
-    {
-        foreach ($logContent as $k => $content) {
-            if (!$content) {
-                $content = '';
-            }
-            if (is_array($content)) {
-                $logContent[$k] = json_encode($content, JSON_UNESCAPED_UNICODE);
-            }
-        }
-        $logString = implode('|', $logContent);
-        return $logString;
+        //...todo
     }
 }

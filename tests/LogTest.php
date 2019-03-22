@@ -3,6 +3,7 @@
 use Myaf\Log\Log;
 //use PHPUnit\Framework\TestCase;
 
+require __DIR__.'/../vendor/autoload.php';
 require __DIR__ . '/../src/Log.php';
 
 class LogTest
@@ -31,7 +32,7 @@ class LogTest
     public function testAutoFlush()
     {
         //初始化日志
-        Log::init('l.eoffcn.com', __DIR__);
+        Log::init('l.eoffcn.com', __DIR__,'Aisa/Shanghai');
         //设置每次都刷日志
         Log::setAutoFlush(true);
         Log::debug("index/hello", "18888888888", 1001, 'world', '其他信息');
@@ -41,5 +42,5 @@ class LogTest
 }
 
 $test = new LogTest();
-$test->testCommon();
+//$test->testCommon();
 $test->testAutoFlush();

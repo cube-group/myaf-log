@@ -1,181 +1,143 @@
 <?php
-
 namespace Myaf\Log;
 
-use Exception;
+/**
+ * Created by PhpStorm.
+ * User: linyang
+ * Date: 2019/3/22
+ * Time: 10:20 AM
+ */
+use Monolog\Formatter\LineFormatter;
+use Monolog\Handler\StreamHandler;
+use Monolog\Logger;
 
 /**
- * 标准动作类日志
- * Class LogAction
- * @package Myaf\Log
+ * Class Log
+ * 标准数据日志
  */
 class LogAction
 {
     /**
-     * 应用名称.
      * @var string
      */
-    private static $app = '';
+    private static $_logPath = '';
     /**
-     * 应用版本号.
      * @var string
      */
-    private static $version = '';
+    private static $_app;
     /**
-     * 日志存储目录.
      * @var string
      */
-    private static $logPath = '';
+    private static $_version;
+    /**
+     * @var Logger
+     */
+    private static $_instance;
 
     /**
-     * 二维数组日志存储器.
-     * @var array
+     * @var Logger
      */
-    private static $logs = array();
+    private $_logger;
 
-    /**
-     * 开启将每次记录都写日志
-     * @var bool
-     */
-    private static $autoFlush = false;
-
-    /**
-     * 初始化日志系统.
-     *
-     * @param $app string 应用名字
-     * @param $version string 应用版本号
-     * @param $logPath string 日志存储路径
-     * @param $timeZone string 默认时区
-     */
-    public static function init($app = '', $version = '', $logPath = '/data/log', $timeZone = 'Asia/Shanghai')
+    public function __construct()
     {
-        if (self::$app) {
-            return;
-        }
-        if (!$app) {
-            $app = getenv('APP_NAME') ? getenv('APP_NAME') : 'unknown';
-        }
-        if (!$version) {
-            $version = getenv('APP_VERSION') ? getenv('APP_VERSION') : 'unknown';
-        }
-        self::$app = $app;
-        self::$version = $version;
-        self::$logPath = $logPath;
-        date_default_timezone_set($timeZone);
+        $output = "%datetime%|%context.app%|%context.version%|%context.client%|%context.os%|%context.ip%|%context.from%|%context.uuid%|%context.action%|%context.uid%|%message%\n";
+        $formatter = new LineFormatter($output, 'Y-m-d H:i:s');
+
+        $stream = new StreamHandler(realpath(self::$_logPath) . '/' . date('Y-m-d') . '.bin');
+        $stream->setFormatter($formatter);
+
+        $this->_logger = new Logger('my_logger');
+        $this->_logger->pushHandler($stream);
     }
 
     /**
-     * 设置自动刷日志
-     *
-     * @param bool $flag
+     * 初始化全局配置变量
+     * @param string $app
+     * @param string $logPath
+     * @param string $timeZone
+     * @param bool $debug
      */
-    public static function setAutoFlush($flag = false)
+    public static function init($app = 'text', $version = '', $logPath = '/data/log', $timeZone = 'Asia/Shanghai')
     {
-        self::$autoFlush = $flag;
+        if (!self::$_instance) {
+            date_default_timezone_set($timeZone);
+            self::$_app = $app;
+            self::$_logPath = realpath($logPath);
+            self::$_instance = new self();
+        }
+        return self::$_instance;
     }
 
     /**
-     * 存储日志
-     * @param $action string 统计动作类型
-     * @param $uid string 用户关联信息
-     * @param $ip string ip信息(如果为空则使用服务器IP)
-     * @param array $ext 扩展字段
-     * @throws Exception
+     * log append
+     * @param $level
+     * @param string $route
+     * @param string $uid
+     * @param int $code
+     * @param string $msg
+     * @param string $ext
      */
-    public static function save($action, $uid, $ip = '', $ext = null)
+    public function append($action, $uid, $ip, $ext)
     {
-        if (!self::$logPath) {
-            self::init();
+        if (is_array($ext)) {
+            $ext = json_encode($ext, JSON_UNESCAPED_UNICODE);
+        } else if (!is_string($ext)) {
+            $ext = '';
         }
-        $logContent = array();
-        //time
-        $logContent[] = date('Y-m-d H:i:s');
-        //app
-        $logContent[] = self::$app;
-        //version
-        $logContent[] = self::$version;
-        //client
-        $logContent[] = 0;
-        //os
-        $logContent[] = strtolower(PHP_OS);
-        //ip
-        $logContent[] = $ip ? $ip : self::serverIp();
-        //from
-        $logContent[] = '';
-        //uuid
-        $logContent[] = '';
-        //uid
-        $logContent[] = $uid;
-        //action
-        $logContent[] = $action;
-        //ext
-        $logContent[] = $ext;
-        $logString = self::getLogString($logContent);
-        array_push(self::$logs, $logString);
-        if (self::$autoFlush) {
-            self::flush();
-        }
+        $this->_logger->addInfo($ext, [
+            'datetime' => date('Y-m-d H:i:s'),
+            'app' => self::$_app,
+            'version' => self::$_version,
+            'client' => 0,
+            'os' => strtolower(PHP_OS),
+            'ip' => $ip ? $ip : self::requestIp(),
+            'from' => '',
+            'uuid' => '',
+            'uid' => $uid,
+            'action' => $action,
+            'ext' => $ext,
+        ]);
     }
-
 
     /**
-     * 将此次访问的的所有日志录入相关日志文件.
-     * @return bool
-     * @throws Exception
+     * 获取访问的用户IP
+     * @return string
      */
-    public static function flush()
+    private static function requestIp()
     {
-        if (empty(self::$logs)) {
-            return true;
+        if (isset($_SERVER['HTTP_REMOTEIP'])) {
+            return $_SERVER['HTTP_REMOTEIP'];
         }
-        $logPath = self::$logPath;
-        if (!realpath(self::$logPath)) {
-            if (!mkdir($logPath, 0777, true)) {
-                throw new Exception("can not mkdir {$logPath}");
-            }
+        if (isset($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+            return explode(',', $_SERVER['HTTP_X_FORWARDED_FOR'])[0];
         }
-        $logFileName = realpath($logPath) . DIRECTORY_SEPARATOR . date('Y-m-d') . '.bin';
-        foreach (self::$logs as $item) {
-            self::writeFile($logFileName, $item);
+        if (isset($_SERVER['HTTP_X_REAL_IP'])) {
+            return $_SERVER['HTTP_X_REAL_IP'];
         }
-        self::$logs = array();
-        return true;
-    }
-
-    private static function serverIp()
-    {
         return isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : '';
     }
 
-    /**
-     * 写入日志文件
-     *
-     * @param string $logFile
-     * @param string $content
-     * @return mixed
-     */
-    private static function writeFile($logFile, $content)
-    {
-        return file_put_contents($logFile, $content . PHP_EOL, FILE_APPEND);
-    }
 
     /**
-     * 获取日志内容字符串
-     *
-     * @param $logContent
-     * @return string
+     * @param string $action
+     * @param string $uid
+     * @param string $ip
+     * @param null $ext
      */
-    private static function getLogString($logContent)
+    public static function save($action = '', $uid = '', $ip = '', $ext = null)
     {
-        foreach ($logContent as $k => $content) {
-            if (!$content) {
-                $content = '';
-            }
-            if (is_array($content)) {
-                $logContent[$k] = http_build_query($content);
-            }
-        }
-        $logString = implode('|', $logContent);
-        return $logString;
+        self::init()->append($action, $uid, $ip, $ext);
+    }
+
+
+    public static function setAutoFlush($flag = true)
+    {
+        //...todo
+    }
+
+    public static function flush()
+    {
+        //...todo
     }
 }
